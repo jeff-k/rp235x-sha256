@@ -1,0 +1,18 @@
+[package]
+name = "rp235x-sha256"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rp235x-hal = {path = "../rp-hal/rp235x-hal"}
+
+[dev-dependencies]
+rp235x-hal = {path = "../rp-hal/rp235x-hal", features = ["binary-info", "critical-section-impl"]}
+embedded-hal = "1.0"
+panic-halt = "0.2"
+usb-device = "0.3"
+usbd-serial = "0.2"
+heapless = "0.8"
+
+[[example]]
+name = "cryptodongle"
