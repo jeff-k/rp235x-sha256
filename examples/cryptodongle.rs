@@ -1,3 +1,5 @@
+//! This example reads bytes from the serial interface and writes
+//! back their sha256 sum
 #![no_std]
 #![no_main]
 
@@ -120,7 +122,7 @@ fn main() -> ! {
 pub static PICOTOOL_ENTRIES: [hal::binary_info::EntryAddr; 5] = [
     hal::binary_info::rp_cargo_bin_name!(),
     hal::binary_info::rp_cargo_version!(),
-    hal::binary_info::rp_program_description!(c"Blinky"),
+    hal::binary_info::rp_program_description!(c"Crypto Dongle"),
     hal::binary_info::rp_cargo_homepage_url!(),
     hal::binary_info::rp_program_build_attribute!(),
 ];
