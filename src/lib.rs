@@ -52,7 +52,7 @@ impl Sha256 {
 
         if idx > 0 {
             self.cache[idx] = 0x80;
-            self.write_word(u32::from_le_bytes(self.cache));
+            self.write_word(u32::from_be_bytes(self.cache));
             self.count += 4 - idx;
         } else {
             self.write_word(0x80000000);
