@@ -1,5 +1,5 @@
+//! Hardware abstraction for the RP235x's (Raspberry Pi Pico 2) built-in SHA256 implementation
 #![no_std]
-#![no_main]
 
 use rp235x_hal::pac;
 
@@ -11,6 +11,7 @@ pub struct Sha256 {
 }
 
 impl Sha256 {
+    /// Initialise a SHA256 hasher
     pub fn new() -> Self {
         let csr = unsafe { &*pac::SHA256::ptr() };
 
@@ -23,7 +24,7 @@ impl Sha256 {
         }
     }
 
-    pub fn write(&mut self, b: u8) {
+    pub fn write_u8(&mut self, b: u8) {
         let idx = self.count % 4;
         self.cache[idx] = b;
         self.count += 1;
@@ -35,6 +36,18 @@ impl Sha256 {
         }
     }
 
+    /// Update hasher state
+    pub fn update(&mut self, input: &[u8]) {
+        for b in input.iter() {
+            self.write_u8(*b);
+        }
+    }
+
+    /// Compute SHA256 hash of `data`
+    pub fn digest(data: &[u8]) -> [u32; 8] {
+        todo!()
+    }
+
     fn write_word(&mut self, word: u32) {
         let csr = unsafe { &*pac::SHA256::ptr() };
         while csr.csr().read().wdata_rdy().bit_is_clear() {
@@ -43,13 +56,13 @@ impl Sha256 {
         csr.wdata().write(|w| unsafe { w.bits(word) });
     }
 
-    // FIPS 180-4 padding
-    pub fn finalise(&mut self) -> [u32; 8] {
+    pub fn finalize(mut self) -> [u32; 8] {
         let csr = unsafe { &*pac::SHA256::ptr() };
 
         // if idx != 0 then there are remaining bytes in the cache
         let idx = self.count % 4;
 
+        // FIPS 180-4 padding
         if idx > 0 {
             self.cache[idx] = 0x80;
             self.write_word(u32::from_be_bytes(self.cache));
