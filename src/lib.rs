@@ -1,29 +1,69 @@
 //! Hardware abstraction for the RP235x's (Raspberry Pi Pico 2) built-in SHA256 implementation
 #![no_std]
 
+use core::marker::PhantomData;
+
+pub struct Disabled;
+pub struct Enabled;
+pub struct Running;
+//pub struct RunningDma<C: ChannelIndex> {
+//    channel: C,
+//}
+
 use rp235x_hal::pac;
 
-pub struct Sha256 {
+pub struct Sha256<State> {
+    csr: pac::SHA256,
+    _state: PhantomData<State>,
+}
+
+pub struct Hasher<'a> {
+    sha256: &'a mut Sha256<Enabled>,
     /// Internal word cache
     cache: [u8; 4],
     /// Message length in bytes
     count: usize,
 }
 
-impl Sha256 {
+impl Sha256<Disabled> {
     /// Initialise a SHA256 hasher
-    pub fn new() -> Self {
-        let csr = unsafe { &*pac::SHA256::ptr() };
+    pub fn new(csr: pac::SHA256, resets: &mut pac::RESETS) -> Sha256<Enabled> {
+        resets.reset().modify(|_, w| w.sha256().clear_bit());
+        while resets.reset_done().read().sha256().bit_is_clear() {}
 
         // turn off hardware endianess swap
         csr.csr()
             .modify(|_, w| w.start().set_bit().bswap().clear_bit());
-        Self {
+
+        Sha256 {
+            csr,
+            //            cache: [0; 4],
+            //            count: 0,
+            _state: PhantomData,
+        }
+    }
+}
+
+impl Sha256<Enabled> {
+    pub fn start(&mut self) -> Hasher<'_> {
+        Hasher {
+            sha256: self,
             cache: [0; 4],
             count: 0,
         }
     }
 
+    //   pub fn start_dma<C: ChannelIndex>(self, channel: Channel<C>) -> Sha256<RunningDma<C>> {
+    //       todo!()
+    //   }
+
+    /// Compute SHA256 hash of `data`
+    pub fn digest(self, input: &[u8]) -> [u8; 32] {
+        todo!()
+    }
+}
+
+impl<'a> Hasher<'a> {
     pub fn write_u8(&mut self, b: u8) {
         let idx = self.count % 4;
         self.cache[idx] = b;
@@ -43,22 +83,14 @@ impl Sha256 {
         }
     }
 
-    /// Compute SHA256 hash of `data`
-    pub fn digest(data: &[u8]) -> [u32; 8] {
-        todo!()
-    }
-
     fn write_word(&mut self, word: u32) {
-        let csr = unsafe { &*pac::SHA256::ptr() };
-        while csr.csr().read().wdata_rdy().bit_is_clear() {
+        while self.sha256.csr.csr().read().wdata_rdy().bit_is_clear() {
             core::hint::spin_loop();
         }
-        csr.wdata().write(|w| unsafe { w.bits(word) });
+        self.sha256.csr.wdata().write(|w| unsafe { w.bits(word) });
     }
 
     pub fn finalize(mut self) -> [u32; 8] {
-        let csr = unsafe { &*pac::SHA256::ptr() };
-
         // if idx != 0 then there are remaining bytes in the cache
         let idx = self.count % 4;
 
@@ -91,6 +123,7 @@ impl Sha256 {
         self.write_word((bc >> 32) as u32);
         self.write_word(bc as u32);
 
+        let csr = &self.sha256.csr;
         // wait for valid sum
         while csr.csr().read().sum_vld().bit_is_clear() {
             core::hint::spin_loop();
@@ -106,5 +139,14 @@ impl Sha256 {
             csr.sum6().read().bits(),
             csr.sum7().read().bits(),
         ]
+    }
+}
+
+impl<'a> Drop for Hasher<'a> {
+    fn drop(&mut self) {
+        self.sha256
+            .csr
+            .csr()
+            .modify(|_, w| w.start().set_bit().bswap().clear_bit());
     }
 }
