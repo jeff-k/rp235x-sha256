@@ -8,7 +8,6 @@ use panic_halt as _;
 use rp235x_hal as hal;
 
 use rp235x_sha256::{Enabled, Sha256};
-use sha2_const;
 
 use embedded_hal::delay::DelayNs;
 use embedded_hal::digital::OutputPin;
@@ -19,25 +18,25 @@ pub static IMAGE_DEF: hal::block::ImageDef = hal::block::ImageDef::secure_exe();
 
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 
-const TEST1: &'static [u8] = b"asdfasdfasf";
-const TEST1HASH: [u8; 32] = sha2_const::Sha256::new().update(&TEST1).finalize();
+const TEST1: &[u8] = b"asdfasdfasf";
+const TEST1HASH: [u8; 32] = sha2_const::Sha256::new().update(TEST1).finalize();
 
-const TEST2: &'static [u8] = b"abc";
-const TEST2HASH: [u8; 32] = sha2_const::Sha256::new().update(&TEST2).finalize();
+const TEST2: &[u8] = b"abc";
+const TEST2HASH: [u8; 32] = sha2_const::Sha256::new().update(TEST2).finalize();
 
-const TEST3: &'static [u8] = b"";
-const TEST3HASH: [u8; 32] = sha2_const::Sha256::new().update(&TEST3).finalize();
+const TEST3: &[u8] = b"";
+const TEST3HASH: [u8; 32] = sha2_const::Sha256::new().update(TEST3).finalize();
 
-const TEST4: &'static [u8] = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasdfg";
-const TEST4HASH: [u8; 32] = sha2_const::Sha256::new().update(&TEST4).finalize();
+const TEST4: &[u8] = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasdfg";
+const TEST4HASH: [u8; 32] = sha2_const::Sha256::new().update(TEST4).finalize();
 
-const TEST5: &'static [u8] = b"aaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasdfg";
-const TEST5HASH: [u8; 32] = sha2_const::Sha256::new().update(&TEST5).finalize();
+const TEST5: &[u8] = b"aaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasdfg";
+const TEST5HASH: [u8; 32] = sha2_const::Sha256::new().update(TEST5).finalize();
 
 fn test_hash(sha: &mut Sha256<Enabled>, msg: &[u8], target: &[u8; 32]) -> bool {
     let mut hasher = sha.start();
 
-    hasher.update(&msg);
+    hasher.update(msg);
 
     let shasum: [u32; 8] = hasher.finalize();
 
@@ -89,38 +88,38 @@ fn main() -> ! {
 
     led_pin.set_high().unwrap();
 
-    if !test_hash(&mut sha, &TEST1, &TEST1HASH) {
+    if !test_hash(&mut sha, TEST1, &TEST1HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
     }
 
-    if !test_hash(&mut sha, &TEST2, &TEST2HASH) {
+    if !test_hash(&mut sha, TEST2, &TEST2HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
     }
 
-    if !test_hash(&mut sha, &TEST3, &TEST3HASH) {
+    if !test_hash(&mut sha, TEST3, &TEST3HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
     }
 
-    if !test_hash(&mut sha, &TEST4, &TEST4HASH) {
+    if !test_hash(&mut sha, TEST4, &TEST4HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
     }
 
     // Test that incorrect hashes fail
-    if test_hash(&mut sha, &TEST5, &TEST4HASH) {
+    if test_hash(&mut sha, TEST5, &TEST4HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
     }
 
-    if test_hash(&mut sha, &TEST4, &TEST5HASH) {
+    if test_hash(&mut sha, TEST4, &TEST5HASH) {
         loop {
             led_pin.set_high().unwrap();
         }
