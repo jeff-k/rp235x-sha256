@@ -81,7 +81,7 @@ fn main() -> ! {
                 Err(_e) => {}
                 Ok(0) => {}
                 Ok(count) => {
-                    let mut response: String<512> = String::new();
+                    let mut response: String<4096> = String::new();
 
                     write!(&mut response, "[ ").unwrap();
                     for byte in buf.iter().take(count) {

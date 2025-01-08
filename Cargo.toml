@@ -13,6 +13,10 @@ panic-halt = "0.2"
 usb-device = "0.3"
 usbd-serial = "0.2"
 heapless = "0.8"
+sha2-const = "0.1"
 
 [[example]]
 name = "cryptodongle"
+
+[[example]]
+name = "test_vectors"
