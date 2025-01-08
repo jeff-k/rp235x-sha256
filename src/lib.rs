@@ -37,8 +37,6 @@ impl Sha256<Disabled> {
 
         Sha256 {
             csr,
-            //            cache: [0; 4],
-            //            count: 0,
             _state: PhantomData,
         }
     }
@@ -70,8 +68,7 @@ impl Hasher<'_> {
         self.count += 1;
 
         if idx == 3 {
-            let word = u32::from_be_bytes(self.cache);
-            self.write_word(word);
+            self.write_word(u32::from_be_bytes(self.cache));
             self.cache = [0; 4];
         }
     }
@@ -92,20 +89,14 @@ impl Hasher<'_> {
 
     pub fn finalize(mut self) -> [u32; 8] {
         // if idx != 0 then there are remaining bytes in the cache
-        let idx = self.count % 4;
+        let cache_idx = self.count % 4;
 
         // FIPS 180-4 padding
-        if idx > 0 {
-            self.cache[idx] = 0x80;
-            self.write_word(u32::from_be_bytes(self.cache));
-            self.count += 4 - idx;
-        } else {
-            self.write_word(0x80000000);
-            self.count += 4;
-        }
+        self.cache[cache_idx] = 0x80;
+        self.write_word(u32::from_be_bytes(self.cache));
 
-        // byte count will be a multiple of 4
-        let msg_words = self.count / 4;
+        // the number of times that `write_word` has been called
+        let msg_words = (self.count + 4) / 4;
 
         // total words to write are the number written + 2 for bit length,
         // rounded to nearest 16
@@ -119,7 +110,7 @@ impl Hasher<'_> {
         }
 
         // write the bit count to the last 2 words
-        let bc: u64 = (self.count - (4 - idx) * (idx > 0) as usize) as u64 * 8;
+        let bc: u64 = self.count as u64 * 8;
         self.write_word((bc >> 32) as u32);
         self.write_word(bc as u32);
 
