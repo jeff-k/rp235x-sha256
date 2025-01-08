@@ -40,6 +40,10 @@ impl Sha256<Disabled> {
             _state: PhantomData,
         }
     }
+
+    pub fn enable() -> Sha256<Enabled> {
+        todo!()
+    }
 }
 
 impl Sha256<Enabled> {
@@ -59,6 +63,18 @@ impl Sha256<Enabled> {
     pub fn digest(self, _input: &[u8]) -> [u8; 32] {
         todo!()
     }
+
+    /*
+        pub fn disable(self) -> Sha256<Disabled> {
+            // TODO: Test this method
+            self.csr.csr().write(|w| unsafe { w.bits(0x1206) });
+
+            Sha256 {
+                csr: self.csr,
+                _state: PhantomData,
+            }
+        }
+    */
 }
 
 impl Hasher<'_> {
