@@ -58,12 +58,12 @@ impl Sha256<Enabled> {
     //   }
 
     /// Compute SHA256 hash of `data`
-    pub fn digest(self, input: &[u8]) -> [u8; 32] {
+    pub fn digest(self, _input: &[u8]) -> [u8; 32] {
         todo!()
     }
 }
 
-impl<'a> Hasher<'a> {
+impl Hasher<'_> {
     pub fn write_u8(&mut self, b: u8) {
         let idx = self.count % 4;
         self.cache[idx] = b;
@@ -142,7 +142,7 @@ impl<'a> Hasher<'a> {
     }
 }
 
-impl<'a> Drop for Hasher<'a> {
+impl Drop for Hasher<'_> {
     fn drop(&mut self) {
         self.sha256
             .csr

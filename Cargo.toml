@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rp235x-hal = {path = "../rp-hal/rp235x-hal"}
+rp235x-hal = "0.2"
 
 [dev-dependencies]
-rp235x-hal = {path = "../rp-hal/rp235x-hal", features = ["binary-info", "critical-section-impl"]}
+rp235x-hal = {version = "0.2", features = ["binary-info", "critical-section-impl"]}
 embedded-hal = "1.0"
 panic-halt = "0.2"
 usb-device = "0.3"

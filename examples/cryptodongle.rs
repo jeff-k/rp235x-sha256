@@ -40,9 +40,6 @@ fn main() -> ! {
     )
     .unwrap();
 
-    pac.RESETS.reset().modify(|_, w| w.sha256().clear_bit());
-    while pac.RESETS.reset_done().read().sha256().bit_is_clear() {}
-
     let usb_bus = UsbBusAllocator::new(hal::usb::UsbBus::new(
         pac.USB,
         pac.USB_DPRAM,
@@ -50,6 +47,8 @@ fn main() -> ! {
         true,
         &mut pac.RESETS,
     ));
+
+    let mut sha = Sha256::new(pac.SHA256, &mut pac.RESETS);
 
     let mut serial = SerialPort::new(&usb_bus);
 
@@ -92,17 +91,21 @@ fn main() -> ! {
 
                     led_pin.set_high().unwrap();
 
-                    let mut sha = Sha256::new();
-                    buf.iter().take(count).for_each(|b| {
-                        sha.write(*b);
-                    });
+                    // Build a `Hasher`
+                    let mut hasher = sha.start();
 
-                    let shasum = sha.finalise();
+                    // Update state of hasher
+                    hasher.update(&buf[..count]);
+
+                    // Finalize and return 256-bit hash
+                    let shasum: [u32; 8] = hasher.finalize();
+
                     led_pin.set_low().unwrap();
 
                     for word in shasum.iter() {
                         write!(&mut response, "{:08x}", word).unwrap();
                     }
+                    writeln!(&mut response).unwrap();
 
                     let mut wr = response.as_bytes();
                     while !wr.is_empty() {
@@ -117,12 +120,13 @@ fn main() -> ! {
     }
 }
 
+// rp_cargo_bin_name, rp_cargo_homepage_url are in rp-hal main
 #[unsafe(link_section = ".bi_entries")]
 #[used]
-pub static PICOTOOL_ENTRIES: [hal::binary_info::EntryAddr; 5] = [
-    hal::binary_info::rp_cargo_bin_name!(),
+pub static PICOTOOL_ENTRIES: [hal::binary_info::EntryAddr; 3] = [
+    //    hal::binary_info::rp_cargo_bin_name!(),
     hal::binary_info::rp_cargo_version!(),
     hal::binary_info::rp_program_description!(c"Crypto Dongle"),
-    hal::binary_info::rp_cargo_homepage_url!(),
+    //    hal::binary_info::rp_cargo_homepage_url!(),
     hal::binary_info::rp_program_build_attribute!(),
 ];
