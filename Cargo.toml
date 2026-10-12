@@ -1,13 +1,26 @@
 [package]
 name = "rp235x-sha256"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "Driver for Raspberry Pi Pico 2 (RP235x) SHA-256 accelerator"
+repository = "https://github.com/jeff-k/rp235x-sha256"
+categories = ["embedded", "no-std", "no-std::no-alloc", "hardware-support", "cryptography"]
+keywords = ["rp2350", "rp235x", "pico2", "sha256"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+digest = ["dep:digest"]
 
 [dependencies]
-rp235x-hal = "0.2"
+rp235x-pac = "0.2"
+digest = { version = "0.11", optional = true }
 
 [dev-dependencies]
-rp235x-hal = {version = "0.2", features = ["binary-info", "critical-section-impl"]}
+rp235x-hal = {version = "0.4", features = ["binary-info", "critical-section-impl"]}
 embedded-hal = "1.0"
 panic-halt = "0.2"
 usb-device = "0.3"
